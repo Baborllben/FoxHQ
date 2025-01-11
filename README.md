@@ -5,7 +5,7 @@ FoxHQ 是一个用C语言重写的多线程 Minecraft 服务端，致力于还�
 # 已知漏洞 Known bugs
 - FOXHQ-BUG_1：
 
-    >The thread handle cannot be closed after the tcpClient thread is executed, resulting in a zombie thread. After the server is shut down, all defunct threads are automatically shut down.
+    >The thread handle cannot be closed after the tcpClient thread is executed, resulting in a defunct thread. After the server is shut down, all defunct threads are automatically shut down.
 
     > 在 tcpClient 线程执行结束后无法关闭线程句柄，造成僵尸线程的情况。关闭服务端后，僵尸线程会自动全部关闭。
 
