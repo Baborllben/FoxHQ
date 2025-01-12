@@ -12,4 +12,4 @@ FoxHQ 是一个用C语言重写的多线程 Minecraft 服务端，致力于还�
     + The current situation: This bug cannot be fixed
     + Reason: Foxrptr's technical capabilities are insufficient
     + 修复情况：无法修复
-    + 原因：狐狸技术力不够，修复不了
+    + 原因：狐狸技术力不够，修复不了。其实可以修复，就是有点困难
