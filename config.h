@@ -58,3 +58,16 @@ int Get_bindPort(toml_table_t *TABLE_server)
     }
     else return 25565;
 }
+
+int Get_maxConnection(toml_table_t *TABLE_server)
+{
+    // 20 为缺省设置
+    if (!TABLE_server) return 20;
+    toml_datum_t max_connection = toml_int_in(TABLE_server, "max_connection");
+    if (max_connection.ok)
+    {
+        if (max_connection.u.i < 0) return 20;
+        else return max_connection.u.i;
+    }
+    else return 20;
+}

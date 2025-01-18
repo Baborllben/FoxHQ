@@ -4,10 +4,9 @@
 #pragma comment(lib, "ws2_32.lib")
 #include "foxhq.h"
 #include "config.h"
+#include "utils/tcpserver.h"
 
 #include <string.h>
-
-DWORD WINAPI ThreadFunction(LPVOID lpParam);//当TCP线程建立的时候运行的函数
 
 int main()
 {
@@ -56,76 +55,28 @@ int main()
     }
 
     // [server] 表解析
+    struct tcpserver *serverOptions = (struct tcpserver *)malloc(sizeof(struct tcpserver));
     toml_table_t *TABLE_server = toml_table_in(toml, "server");
-    char CONFIG_bind_ip[16] = "";
-    unsigned short CONFIG_bind_port;
-    strcpy(CONFIG_bind_ip, Get_bindIP(TABLE_server));
-    CONFIG_bind_port = Get_bindPort(TABLE_server);
+
+    serverOptions->bind_ip = (char *)malloc(16);
+    strcpy(serverOptions->bind_ip, Get_bindIP(TABLE_server));//bind_ip
+    print("已加载配置：bind_ip = %s", 0, "信息", serverOptions->bind_ip);
+
+    serverOptions->bind_port = Get_bindPort(TABLE_server);//bind_port
+    print("已加载配置：bind_port = %d", 0, "信息", serverOptions->bind_port);
+    serverOptions->max_connection = Get_maxConnection(TABLE_server);//max_connection
+    print("已加载配置：bind_ip = %d", 0, "信息", serverOptions->max_connection);
 
     // 开启服务器
-    WSADATA wsaData;
-    int iResult;
-    iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);//初始化Winsock
-    if (iResult != 0)
-    {
-        print("初始化Winsock出现问题", 2, "错误");
+    HANDLE TCPSERVER = CreateThread(NULL, 0, tcpServer, serverOptions, 0, NULL);
+    if (TCPSERVER == NULL) {
+        print("创建 TCPSERVER 失败！", 2, "错误");
+        free(serverOptions->bind_ip);
+        free(serverOptions);
         return 0;
     }
-    SOCKET Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);//创建套接字
-    if (Socket == INVALID_SOCKET) {
-        print("创建套接字出现问题", 2, "错误");
-        WSACleanup();
-        return 0;
-    }
-    struct sockaddr_in server;//设置套接字地址
-    server.sin_family = AF_INET;
-    server.sin_addr.s_addr = inet_addr(CONFIG_bind_ip);
-    server.sin_port = htons(CONFIG_bind_port);
-    iResult = bind(Socket, (SOCKADDR*)&server, sizeof(server));//绑定套接字
-    if (iResult == SOCKET_ERROR) {
-        print("绑定套接字时出现问题，可能是端口已被占用", 2, "错误");
-        closesocket(Socket);
-        WSACleanup();
-        return 0;
-    }
-    iResult = listen(Socket, SOMAXCONN);//监听连接请求
-    if (iResult == SOCKET_ERROR) {
-        print("监听连接请求时出现问题", 2, "错误");
-        closesocket(Socket);
-        WSACleanup();
-        return 0;
-    }
-    for (;;)
-    {
-        SOCKET clientSocket = accept(Socket, NULL, NULL);//接受客户端连接
-        if (clientSocket == INVALID_SOCKET) {
-            print("某个客户端连接失败", 1, "警告");
-        }
-        else
-        {
-            CreateThread(NULL, 0, ThreadFunction, (LPVOID)clientSocket, 0, NULL);
-        }
-    }
+
+    WaitForSingleObject(TCPSERVER, INFINITE);
+    CloseHandle(TCPSERVER);
     return 0;
-}
-
-DWORD WINAPI ThreadFunction(LPVOID lpParam)
-{
-    SOCKET clientSocket = (SOCKET)lpParam;  // 将参数转换为 SOCKET 类型
-
-    char buffer[1024];
-    int bytesReceived;
-
-    // 接收数据
-    bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-    if (bytesReceived > 0) {
-        printf("Received: %s\n", buffer);
-        // 发送响应
-        send(clientSocket, buffer, strlen(buffer), 0);
-    } else {
-        printf("Connection closed or error occurred.\n");
-    }
-
-    // 关闭套接字
-    closesocket(clientSocket);
 }
