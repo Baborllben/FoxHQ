@@ -1,9 +1,0 @@
-[server]
-bind_ip = "127.0.0.1"
-bind_port = 25565
-# max_connection ≈ max_player，是最大连接数
-max_connection = 2
-
-[properties]
-motd_line1 = "A Minecraft Server"
-motd_line2 = "FoxHQ by 狐不像"
